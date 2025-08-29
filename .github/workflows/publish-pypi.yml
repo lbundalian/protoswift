@@ -24,6 +24,7 @@ jobs:
       - name: Install uv
         run: pip install uv
 
+      # Optional: ensure tag matches pyproject version
       - name: Verify version matches tag
         run: |
           python - <<'PY'
@@ -39,17 +40,17 @@ jobs:
       - name: Build sdist and wheel
         run: uv build
 
-      # Classic API token publish (runs if secret is defined)
+      # If you set a secret named PYPI_API_TOKEN, publish with it (classic method)
       - name: Publish to PyPI (API token)
-        if: ${{ BUILD.PYPI_API_TOKEN }}
+        if: ${{ secrets.PYPI_API_TOKEN != '' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
-          password: ${{ BUILD.PYPI_API_TOKEN }}
+          password: ${{ secrets.PYPI_API_TOKEN }}
 
-      # Trusted Publishing (runs only if no secret is set)
+      # Otherwise, use Trusted Publishing (OIDC). Make sure the publisher is configured on PyPI.
       - name: Publish to PyPI (Trusted Publishing)
-        if: ${{ !BUILD.PYPI_API_TOKEN }}
+        if: ${{ secrets.PYPI_API_TOKEN == '' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
