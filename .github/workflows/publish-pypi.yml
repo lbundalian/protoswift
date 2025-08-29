@@ -3,14 +3,18 @@ name: Publish to PyPI
 on:
   push:
     tags:
-      - 'v*'   # e.g. v0.1.2
+      - 'v*'        # e.g. v0.1.2
+  workflow_dispatch:
 
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write   # required for Trusted Publishing
+      id-token: write    # required for Trusted Publishing (OIDC)
+
+    env:
+      HAVE_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
     steps:
       - name: Checkout
@@ -24,33 +28,29 @@ jobs:
       - name: Install uv
         run: pip install uv
 
-      # Optional: ensure tag matches pyproject version
       - name: Verify version matches tag
         run: |
           python - <<'PY'
-          import os, tomllib, pathlib, sys
-          py = tomllib.loads(pathlib.Path("pyproject.toml").read_text())
-          version = py["project"]["version"]
+          import os, sys, tomllib, pathlib
+          data = tomllib.loads(pathlib.Path("pyproject.toml").read_text())
+          version = data["project"]["version"]
           tag = os.environ["GITHUB_REF_NAME"]  # e.g. v0.1.2
-          if tag.lstrip("v") != version:
-              print(f"Version mismatch: tag={tag} pyproject={version}")
+          if tag.startswith("v"):
+              tag = tag[1:]
+          if tag != version:
+              print(f"Version mismatch: tag={os.environ['GITHUB_REF_NAME']} pyproject={version}")
               sys.exit(1)
+          print(f"Version OK: {version}")
           PY
 
       - name: Build sdist and wheel
         run: uv build
 
-      # If you set a secret named PYPI_API_TOKEN, publish with it (classic method)
+      # Use API token if provided
       - name: Publish to PyPI (API token)
-        if: ${{ secrets.PYPI_API_TOKEN != '' }}
+        if: ${{ env.HAVE_PYPI_TOKEN != '' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
           password: ${{ secrets.PYPI_API_TOKEN }}
 
-      # Otherwise, use Trusted Publishing (OIDC). Make sure the publisher is configured on PyPI.
-      - name: Publish to PyPI (Trusted Publishing)
-        if: ${{ secrets.PYPI_API_TOKEN == '' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist
