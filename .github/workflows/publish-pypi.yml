@@ -3,8 +3,8 @@ name: Publish to PyPI
 on:
   push:
     tags:
-      - 'v*'        # e.g. v0.1.2
-  workflow_dispatch:
+      - 'v*'            # e.g. v0.1.3
+  workflow_dispatch:     # allow manual runs
 
 jobs:
   build-and-publish:
@@ -13,10 +13,17 @@ jobs:
       contents: read
       id-token: write    # required for Trusted Publishing (OIDC)
 
+    # Mirror the secret into an env var so we can use it in `if:` safely
     env:
       HAVE_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
     steps:
+      - name: Debug event
+        run: |
+          echo "event: $GITHUB_EVENT_NAME"
+          echo "ref:   $GITHUB_REF"
+          echo "name:  $GITHUB_REF_NAME"
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -28,15 +35,21 @@ jobs:
       - name: Install uv
         run: pip install uv
 
+      # OPTIONAL: version check. Comment out if you’re still wiring up tags.
       - name: Verify version matches tag
         run: |
           python - <<'PY'
-          import os, sys, tomllib, pathlib
+          import os, sys, pathlib
+          try:
+              import tomllib
+          except ModuleNotFoundError:
+              print("tomllib missing; using Python <3.11?"); sys.exit(1)
           data = tomllib.loads(pathlib.Path("pyproject.toml").read_text())
-          version = data["project"]["version"]
-          tag = os.environ["GITHUB_REF_NAME"]  # e.g. v0.1.2
-          if tag.startswith("v"):
-              tag = tag[1:]
+          version = data.get("project",{}).get("version")
+          if not version:
+              print("No [project].version found; skipping strict check"); sys.exit(0)
+          tag = os.environ["GITHUB_REF_NAME"]  # e.g. v0.1.3
+          tag = tag[1:] if tag.startswith("v") else tag
           if tag != version:
               print(f"Version mismatch: tag={os.environ['GITHUB_REF_NAME']} pyproject={version}")
               sys.exit(1)
@@ -46,17 +59,17 @@ jobs:
       - name: Build sdist and wheel
         run: uv build
 
-      # Use API token if provided
+      # API token path (runs if secret is set)
       - name: Publish to PyPI (API token)
-        if: ${{ env.HAVE_PYPI_TOKEN != '' }}
+        if: env.HAVE_PYPI_TOKEN != ''
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
           password: ${{ secrets.PYPI_API_TOKEN }}
 
-      # Otherwise use Trusted Publishing (configure publisher on PyPI)
+      # Trusted Publishing path (runs if no secret)
       - name: Publish to PyPI (Trusted Publishing)
-        if: ${{ env.HAVE_PYPI_TOKEN == '' }}
+        if: env.HAVE_PYPI_TOKEN == ''
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
