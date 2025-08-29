@@ -1,0 +1,25 @@
+[project]
+name = "protoswift"
+version = "0.1.0"
+description = "Swiftly scaffold a Python project structure"
+authors = [{ name = "Linnaeus Bundalian" }]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+dependencies = [
+    "pyyaml",
+    "rich"
+]
+
+[project.scripts]
+protoswift = "protoswift.cli:main"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

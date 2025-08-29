@@ -1,0 +1,44 @@
+# Default ProtoSwift scaffold
+project_name: my-app
+
+folders:
+  - app
+  - context
+  - models
+  - services
+
+files:
+  - name: README.md
+    content: |
+      # {project_name}
+
+      Generated with **ProtoSwift 🕊️**
+
+      ## Structure
+      - app/
+      - context/
+      - models/
+      - services/
+
+  - name: .gitignore
+    content: |
+      __pycache__/
+      *.py[cod]
+      .venv/
+      .env
+
+  - name: .env.example
+    content: |
+      # Copy to .env
+      ENV=dev
+
+  - name: app/__init__.py
+    content: ""
+
+  - name: app/__main__.py
+    content: |
+      def main():
+          print("Hello from app!")
+
+      if __name__ == "__main__":
+          main()
