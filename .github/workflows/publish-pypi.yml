@@ -1,28 +1,56 @@
-# .github/workflows/publish-pypi.yml
 name: Publish to PyPI
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*'   # e.g. v0.1.2
 
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+      id-token: write   # required for Trusted Publishing
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Install uv
         run: pip install uv
+
+      # Optional: ensure tag matches pyproject version
+      - name: Verify version matches tag
+        run: |
+          python - <<'PY'
+          import os, tomllib, pathlib, sys
+          py = tomllib.loads(pathlib.Path("pyproject.toml").read_text())
+          version = py["project"]["version"]
+          tag = os.environ["GITHUB_REF_NAME"]  # e.g. v0.1.2
+          if tag.lstrip("v") != version:
+              print(f"Version mismatch: tag={tag} pyproject={version}")
+              sys.exit(1)
+          PY
+
       - name: Build sdist and wheel
         run: uv build
-      - name: Publish to PyPI
+
+      # If you set a secret named PYPI_API_TOKEN, publish with it (classic method)
+      - name: Publish to PyPI (API token)
+        if: ${{ secrets.PYPI_API_TOKEN != '' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
-          password: ${{ secrets.PYPI_API_TOKEN }} 
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+      # Otherwise, use Trusted Publishing (OIDC). Make sure the publisher is configured on PyPI.
+      - name: Publish to PyPI (Trusted Publishing)
+        if: ${{ secrets.PYPI_API_TOKEN == '' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist

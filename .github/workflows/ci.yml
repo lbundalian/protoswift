@@ -1,6 +1,5 @@
 # .github/workflows/ci.yml
 name: CI
-
 on:
   push:
     branches: [ main ]
@@ -10,24 +9,21 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install uv
         run: pip install uv
 
-      - name: Create uv virtualenv   # <-- NEW
+      - name: Create virtualenv
         run: uv venv
 
-      - name: Install package (editable) + test deps
+      - name: Install package + test deps
         run: |
           uv pip install -e .
           uv pip install pytest pytest-cov
 
-      - name: Run tests
-        run: pytest -q --cov=protoswift --cov-report=term-missing
+      - name: Run tests (via uv)
+        run: uv run pytest -q --cov=protoswift --cov-report=term-missing
