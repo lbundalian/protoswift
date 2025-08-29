@@ -41,15 +41,15 @@ jobs:
 
       # Classic API token publish (runs if secret is defined)
       - name: Publish to PyPI (API token)
-        if: ${{ secrets.PYPI_API_TOKEN }}
+        if: ${{ BUILD.PYPI_API_TOKEN }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ BUILD.PYPI_API_TOKEN }}
 
       # Trusted Publishing (runs only if no secret is set)
       - name: Publish to PyPI (Trusted Publishing)
-        if: ${{ !secrets.PYPI_API_TOKEN }}
+        if: ${{ !BUILD.PYPI_API_TOKEN }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist
