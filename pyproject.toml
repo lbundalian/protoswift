@@ -1,6 +1,6 @@
 [project]
 name = "protoswift"
-version = "0.1.0"
+version = "1.0.0"
 description = "Swiftly scaffold a Python project structure"
 authors = [{ name = "Linnaeus Bundalian" }]
 readme = "README.md"
