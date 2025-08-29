@@ -1,7 +1,7 @@
 # ProtoSwift 🕊️
 
 Swiftly scaffold Python projects with style.  
-Generate a clean, customizable project structure in seconds — with optional Conda environments.
+Generate a clean, customizable project structure in seconds — with optional Conda environments!
 
 ---
 
