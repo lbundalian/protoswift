@@ -2,12 +2,8 @@
 
 Swiftly scaffold Python projects with style.  
 Generate a clean, customizable project structure in seconds — with optional Conda environments.
-
 ---
-
-## 📸 Demo
-
-![Scaffold Demo](docs/swift.png)
+<img src="docs/swift.png" alt="Scaffold Demo" width="500"/>
 
 ---
 
